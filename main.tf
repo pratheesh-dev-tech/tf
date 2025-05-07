@@ -1,25 +1,52 @@
 provider "aws" {
-  region = "us-west-2"
+  region = "us-east-1"
 }
 
 resource "aws_s3_bucket" "example_bucket" {
-  bucket = "raaarraaathi"  # Your specified bucket name
+  bucket = "rathidevisuresh"
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    enabled = true
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    expiration {
+      days = 365
+    }
+  }
+
+  logging {
+    target_bucket = "your-log-bucket-name"
+    target_prefix = "logs/"
+  }
+
+  replication_configuration {
+    role = "arn:aws:iam::123456789012:role/s3-replication-role"  # Replace with actual IAM role ARN
+
+    rules {
+      id     = "replication-rule"
+      status = "Enabled"
+
+      filter {
+        prefix = ""
+      }
+
+      destination {
+        bucket        = "arn:aws:s3:::destination-bucket"  # Replace with your destination bucket
+        storage_class = "STANDARD"
+      }
+    }
+  }
 
   tags = {
-    Name        = "gyfengucrnhuivgvgmivgmi"
+    Name        = "MyExampleBucket"
     Environment = "Dev"
   }
-}
-
-# Define ACL separately using aws_s3_bucket_acl resource
-resource "aws_s3_bucket_acl" "example_bucket_acl" {
-  bucket = aws_s3_bucket.example_bucket.bucket
-  acl    = "private"
-}
-
-resource "aws_s3_bucket_object" "example_object" {
-  bucket = aws_s3_bucket.example_bucket.bucket
-  key    = "example-object"
-  source = "path/to/local/file"  # Replace with your local file path
-  acl    = "private"
 }
