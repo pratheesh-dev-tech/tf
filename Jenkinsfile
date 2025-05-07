@@ -3,19 +3,27 @@ pipeline {
 
   environment {
     AWS_REGION = 'us-east-1'
-    AWS_CREDENTIALS = credentials('your-aws-creds-id') // Replace with Jenkins credential ID
+    // These are Jenkins credentials (type: AWS Credentials)
+    AWS_ACCESS_KEY_ID = credentials('aws-creds-id')
+    AWS_SECRET_ACCESS_KEY = credentials('aws-creds-id')
   }
 
   stages {
-    stage('Clone Repo') {
+    stage('Clone GitHub Repo') {
       steps {
-        git 'https://github.com/pratheesh-dev-tech/tf.git'
+        git branch: 'main', url: 'https://github.com/your-username/your-repo-name.git'
       }
     }
 
     stage('Terraform Init') {
       steps {
         sh 'terraform init'
+      }
+    }
+
+    stage('Terraform Validate') {
+      steps {
+        sh 'terraform validate'
       }
     }
 
@@ -29,6 +37,15 @@ pipeline {
       steps {
         sh 'terraform apply -auto-approve'
       }
+    }
+  }
+
+  post {
+    success {
+      echo 'Terraform apply completed successfully.'
+    }
+    failure {
+      echo 'Terraform apply failed.'
     }
   }
 }
