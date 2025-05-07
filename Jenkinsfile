@@ -1,61 +1,92 @@
 pipeline {
     agent any
-
+    
     environment {
-        // Set Terraform path explicitly
-        PATH = "/opt/homebrew/bin:${env.PATH}"
+        // Set the path to Terraform binary
+        TERRAFORM_PATH = "/opt/homebrew/bin/terraform"
     }
-
+    
     stages {
-        stage('Clone GitHub Repo') {
+        // Stage to checkout SCM (GitHub Repository)
+        stage('Checkout SCM') {
             steps {
-                git 'https://github.com/pratheesh-dev-tech/tf.git'
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']], // Checkout main branch
+                    userRemoteConfigs: [[url: 'https://github.com/pratheesh-dev-tech/tf.git']]
+                ])
             }
         }
 
+        // Stage to set AWS credentials
         stage('Set AWS Credentials') {
             steps {
                 withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'aws-creds-id'  // Use your AWS credentials ID here
+                    $class: 'AmazonWebServicesCredentialsBinding', 
+                    credentialsId: 'aws-creds-id', 
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID', 
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
-                    // AWS credentials are now available as environment variables
-                    echo 'AWS Credentials are set.'
+                    echo "AWS Credentials are set."
                 }
             }
         }
 
+        // Stage to initialize Terraform
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                script {
+                    sh """
+                        export PATH=$PATH:$TERRAFORM_PATH
+                        terraform init
+                    """
+                }
             }
         }
 
+        // Stage to validate Terraform configuration
         stage('Terraform Validate') {
             steps {
-                sh 'terraform validate'
+                script {
+                    sh """
+                        terraform validate
+                    """
+                }
             }
         }
 
+        // Stage to plan Terraform changes
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan'
+                script {
+                    sh """
+                        terraform plan
+                    """
+                }
             }
         }
 
+        // Stage to apply Terraform configuration
         stage('Terraform Apply') {
             steps {
-                input message: 'Approve Terraform Apply?'
-                sh 'terraform apply -auto-approve'
+                script {
+                    sh """
+                        terraform apply -auto-approve
+                    """
+                }
+            }
+        }
+
+        // Post Actions: To handle post pipeline actions like cleanup or notifications
+        stage('Post Actions') {
+            steps {
+                echo "Terraform apply finished."
             }
         }
     }
 
     post {
         failure {
-            echo 'Terraform apply failed.'
+            echo "Pipeline failed. Please check the logs."
         }
     }
 }
