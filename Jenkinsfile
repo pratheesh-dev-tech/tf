@@ -11,7 +11,7 @@ pipeline {
   stages {
     stage('Clone GitHub Repo') {
       steps {
-        git branch: 'main', url: 'https://github.com/your-username/your-repo-name.git'
+        git branch: 'main', url: 'https://github.com/pratheesh-dev-tech/tf.git'
       }
     }
 
