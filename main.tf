@@ -3,10 +3,10 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "example_bucket" {
-  bucket = "my-example-bucket"
+  bucket = "raaarraaathi"  # Your specified bucket name
 
   tags = {
-    Name        = "rrrrrraaaaathi"
+    Name        = "raaarraaathi"
     Environment = "Dev"
   }
 }
@@ -20,6 +20,6 @@ resource "aws_s3_bucket_acl" "example_bucket_acl" {
 resource "aws_s3_bucket_object" "example_object" {
   bucket = aws_s3_bucket.example_bucket.bucket
   key    = "example-object"
-  source = "path/to/local/file"
+  source = "path/to/local/file"  # Replace with your local file path
   acl    = "private"
 }
