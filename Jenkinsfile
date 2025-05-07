@@ -1,33 +1,59 @@
 pipeline {
-    agent any
-    environment {
-        // Set AWS credentials using AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
+  agent any
+
+  environment {
+    AWS_DEFAULT_REGION = 'us-east-1'
+  }
+
+  stages {
+    stage('Checkout SCM') {
+      steps {
+        git url: 'https://github.com/pratheesh-dev-tech/tf.git', branch: 'main'
+      }
     }
-    tools {
-        // Ensure Git is configured in Jenkins tools
-        git 'Default'
+
+    stage('Set AWS Credentials') {
+      steps {
+        withCredentials([[
+          $class: 'AmazonWebServicesCredentialsBinding',
+          credentialsId: 'aws-creds-id', // Replace this with your actual Jenkins credential ID
+          accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+          secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+        ]]) {
+          echo 'AWS Credentials are set.'
+        }
+      }
     }
-    stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://your-repo-url.git'
-            }
-        }
-        stage('Terraform Init') {
-            steps {
-                script {
-                    sh 'terraform init'
-                }
-            }
-        }
-        stage('Terraform Apply') {
-            steps {
-                script {
-                    sh 'terraform apply -auto-approve'
-                }
-            }
-        }
+
+    stage('Terraform Init') {
+      steps {
+        sh 'terraform init'
+      }
     }
+
+    stage('Terraform Validate') {
+      steps {
+        sh 'terraform validate'
+      }
+    }
+
+    stage('Terraform Plan') {
+      steps {
+        sh 'terraform plan'
+      }
+    }
+
+    stage('Terraform Apply') {
+      steps {
+        input message: 'Approve apply?'
+        sh 'terraform apply -auto-approve'
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Pipeline failed. Please check the logs.'
+    }
+  }
 }
