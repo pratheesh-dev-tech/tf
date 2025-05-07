@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        // Set the path to Terraform binary
+        // Set the full path to Terraform binary
         TERRAFORM_PATH = "/opt/homebrew/bin/terraform"
     }
     
@@ -36,8 +36,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        export PATH=$PATH:$TERRAFORM_PATH
-                        terraform init
+                        ${TERRAFORM_PATH} init
                     """
                 }
             }
@@ -48,7 +47,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        terraform validate
+                        ${TERRAFORM_PATH} validate
                     """
                 }
             }
@@ -59,7 +58,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        terraform plan
+                        ${TERRAFORM_PATH} plan
                     """
                 }
             }
@@ -70,7 +69,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        terraform apply -auto-approve
+                        ${TERRAFORM_PATH} apply -auto-approve
                     """
                 }
             }
